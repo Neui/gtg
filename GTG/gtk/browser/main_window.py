@@ -130,6 +130,8 @@ class MainWindow(Gtk.ApplicationWindow):
         app.timer.connect('refresh', self.refresh_all_views)
         app.timer.connect('refresh', self._set_defer_days)
 
+        self.stack_switcher.get_stack().connect('notify::visible-child', self._save_view_pane)
+
         # This needs to be called again after setting everything up,
         # so the buttons start disabled
         self.on_cursor_changed()
@@ -538,6 +540,12 @@ class MainWindow(Gtk.ApplicationWindow):
             model.set_sort_column_id(sort_column, sort_order)
 
         self.restore_collapsed_tasks()
+
+        view_name = self.config.get('view')
+        if self.stack_switcher.get_stack().get_child_by_name(view_name):
+            self.stack_switcher.get_stack().set_visible_child_name(view_name)
+        else:
+            log.info(f"Invalid config value for view: {view_name}")
 
         def open_task(req, t):
             """ Open the task if loaded. Otherwise ask for next iteration """
@@ -1200,6 +1208,9 @@ class MainWindow(Gtk.ApplicationWindow):
                     self.quickadd_entry.set_text(tag.get_attribute("query"))
 
         self.applied_tags = new_taglist
+
+    def _save_view_pane(self, obj, pspec):
+        self.config.set('view', self.stack_switcher.get_stack().get_visible_child_name())
 
 # PUBLIC METHODS ###########################################################
     def has_any_selection(self):
