@@ -27,18 +27,49 @@ GTG modules and plugins that wish to use logging should import the log object::
 
 """
 import logging
+from gi.repository import GLib
 
+CATEGORY = 'gtg'
 
-log = logging.getLogger('gtg')
+class PythonToGLibLoggerHandler(logging.Handler):
+    """An python logger handler that forwards to the GLib logging system"""
+    def __init__(self, level=logging.NOTSET):
+        super().__init__(level)
 
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - "
-                              + "%(module)s:%(funcName)s:%(lineno)d - "
-                              + "%(message)s")
-ch.setFormatter(formatter)
-log.addHandler(ch)
+    def _level_to_glib(self, level):
+        if level > 50:
+            return GLib.LogLevelFlags.LEVEL_CRITICAL
+        if level > 40:
+            return GLib.LogLevelFlags.LEVEL_ERROR
+        if level > 30:
+            return GLib.LogLevelFlags.LEVEL_WARNING
+        if level > 20:
+            return GLib.LogLevelFlags.LEVEL_INFO
+        if level > 10:
+            return GLib.LogLevelFlags.LEVEL_DEBUG
+        return GLib.LogLevelFlags.LEVEL_DEBUG
+        # Not used: GLib.LogLevelFlags.LEVEL_MESSAGE
 
+    def emit(self, record):
+        log_level = self._level_to_glib(record.levelno)
+        fields = GLib.Variant('a{sv}', {
+            'MESSAGE': GLib.Variant('s', self.format(record)),
+            'CODE_FUNC': GLib.Variant('s', record.funcName),
+            'CODE_FILE': GLib.Variant('s', record.pathname),
+            'CODE_LINE': GLib.Variant('i', record.lineno),
+            'PYTHON_MESSAGE': GLib.Variant('s', record.getMessage()),
+            'PYTHON_MODULE': GLib.Variant('s', record.module),
+        })
+        GLib.log_variant(record.name, log_level, fields)
+
+log = logging.getLogger(CATEGORY)
+
+handler = PythonToGLibLoggerHandler()
+
+formatter = logging.Formatter("[%(module)s:%(funcName)s:%(lineno)d] %(message)s")
+handler.setFormatter(formatter)
+
+log.addHandler(handler)
 
 def log_debug_enabled():
     """Return whether the logger is enabled for debug messages."""
