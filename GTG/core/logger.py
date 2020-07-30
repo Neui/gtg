@@ -27,6 +27,7 @@ GTG modules and plugins that wish to use logging should import the log object::
 
 """
 import logging
+import os
 from gi.repository import GLib
 
 CATEGORY = 'gtg'
@@ -71,7 +72,34 @@ handler.setFormatter(formatter)
 
 log.addHandler(handler)
 
+def glib_set_debug(debug):
+    """Instruct the default GLib logger to output debug messages"""
+    glib_categories = os.environ.get('G_MESSAGES_DEBUG', '').split(' ')
+    if debug and 'all' in glib_categories:
+        pass # all already includes gtg
+    elif debug and CATEGORY not in glib_categories:
+        glib_categories.append(CATEGORY)
+    elif debug:
+        return # Do nothing, debug is already enabled
+    else:
+        try:
+            glib_categories.remove(CATEGORY)
+        except ValueError:
+            pass
+        try:
+            glib_categories.remove('all')
+        except ValueError:
+            pass
+    g_messages_debug = ' '.join(glib_categories)
+    os.environ['G_MESSAGES_DEBUG'] = g_messages_debug
+    os.putenv('G_MESSAGES_DEBUG', g_messages_debug)
+
+def glib_in_debug():
+    """Returns whenever the default GLib logger would output debug messages"""
+    glib_categories = os.environ.get('G_MESSAGES_DEBUG', '').split(' ')
+    return any([e in (CATEGORY, 'all') for e in glib_categories])
+
 def log_debug_enabled():
     """Return whether the logger is enabled for debug messages."""
 
-    return log.isEnabledFor(logging.DEBUG)
+    return glib_in_debug() or log.isEnabledFor(logging.DEBUG)

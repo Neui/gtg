@@ -34,7 +34,7 @@ from GTG.core.plugins.api import PluginAPI
 from GTG.backends import BackendFactory
 from GTG.core.datastore import DataStore
 from GTG.core.dirs import CSS_DIR
-from GTG.core.logger import log
+from GTG.core.logger import log, glib_set_debug, glib_in_debug
 from GTG.core.dates import Date
 from GTG.gtk.backends import BackendsDialog
 from GTG.gtk.browser.tag_editor import TagEditor
@@ -81,6 +81,8 @@ class Application(Gtk.Application):
 
         super().__init__(application_id=app_id)
 
+        debug = debug or glib_in_debug()
+        glib_set_debug(debug)
         if debug:
             log.setLevel(logging.DEBUG)
             log.debug("Debug output enabled.")
