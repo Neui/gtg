@@ -34,7 +34,7 @@ from GTG.core.plugins.api import PluginAPI
 from GTG.backends import BackendFactory
 from GTG.core.datastore import DataStore
 from GTG.core.dirs import CSS_DIR
-from GTG.core.logger import log, glib_set_debug, glib_in_debug
+from GTG.core.logger import log, glib_set_debug, glib_in_debug, handler as logger_handler
 from GTG.core.dates import Date
 from GTG.gtk.backends import BackendsDialog
 from GTG.gtk.browser.tag_editor import TagEditor
@@ -81,6 +81,9 @@ class Application(Gtk.Application):
 
         super().__init__(application_id=app_id)
 
+        log.removeHandler(logger_handler)
+        logging.getLogger().addHandler(logger_handler)
+
         debug = debug or glib_in_debug()
         glib_set_debug(debug)
         if debug:
@@ -88,6 +91,7 @@ class Application(Gtk.Application):
             log.debug("Debug output enabled.")
         else:
             log.setLevel(logging.INFO)
+        logging.getLogger().setLevel(log.getEffectiveLevel())
 
         # Register backends
         datastore = DataStore()
