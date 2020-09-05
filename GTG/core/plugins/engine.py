@@ -149,12 +149,15 @@ class PluginEngine(Borg):
             for f in os.listdir(path):
                 info_file = os.path.join(path, f)
                 if os.path.isfile(info_file) and f.endswith('.gtg-plugin'):
-                    parser = GLib.KeyFile.new()
-                    parser.load_from_file(info_file, GLib.KeyFileFlags.NONE)
-                    keys = parser.get_keys("GTG Plugin")[0] # The list of keys
-                    info = {key: parser.get_locale_string("GTG Plugin", key, None) for key in keys}
-                    p = Plugin(info, PLUGIN_DIRS)
-                    self.plugins[p.module_name] = p
+                    try:
+                        parser = GLib.KeyFile.new()
+                        parser.load_from_file(info_file, GLib.KeyFileFlags.NONE)
+                        keys = parser.get_keys("GTG Plugins")[0] # The list of keys
+                        info = {key: parser.get_locale_string("GTG Plugin", key, None) for key in keys}
+                        p = Plugin(info, PLUGIN_DIRS)
+                        self.plugins[p.module_name] = p
+                    except Exception as e:
+                        log.error("Failed to load %s: %s" % (info_file, e))
 
     def get_plugin(self, module_name):
         return self.plugins[module_name]
