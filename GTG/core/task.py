@@ -892,6 +892,11 @@ class Task(TreeNode):
         # Return a copy of the list of tags. Not the original object.
         return list(self.tags)
 
+    def get_tags_name_raw(self):
+        # Return the list of tags to avoid copies, DO NOT MODIFY!
+        # Should be sorted
+        return self.tags
+
     # return a copy of the list of tag objects
     def get_tags(self):
         l = []
