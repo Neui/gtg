@@ -925,6 +925,7 @@ class Task(TreeNode):
         # Do not add the same tag twice
         if tagname not in self.tags:
             self.tags.append(tagname)
+            self.tags.sort() # Sorting to make sorting easier
             if self.is_loaded():
                 for child in self.get_subtasks():
                     if child.can_be_deleted:
