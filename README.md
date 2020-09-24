@@ -81,6 +81,10 @@ On Ubuntu you can install all that with:
 
     sudo apt install python3-cheetah pdftk-java pdfjam texlive-latex-base
 
+If you're using pip directly (such when using virtualenv), you can install the python part:
+
+   pip install -r requirements.plugins.txt
+
 ### Running the beast
 
 In order to run the developer/git version of GTG, you need to launch the `debug.sh` script. There is a shortcut to it in the root directory where you downloaded the code, that you can execute simply with this command:
