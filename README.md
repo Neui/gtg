@@ -46,6 +46,8 @@ You can get most of those from your distribution packages:
     sudo dnf install meson python3-dbus python3-cairo python3-gobject gtk3 itstool gettext python3-lxml
     # On Debian/Ubuntu
     sudo apt install meson python3-dbus python3-cairo python3-gi gir1.2-pango-1.0 gir1.2-gdkpixbuf-2.0 gir1.2-gtk-3.0 itstool gettext python3-lxml
+    # When using pip directly (like in virtualenv, still requires system gettext, itstool, gtk, etc.)
+    pip install -r requirements.txt
 
 liblarch may be harder to come by until distributions package the python3 version of it, alongside GTG 0.4+ itself.
 You can get it meanwhile via PIP (commonly provided by python3-pip package):

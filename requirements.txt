@@ -1,0 +1,7 @@
+meson
+ninja
+dbus-python
+pycairo
+pygobject>=3.20
+# libLarch>=3.0
+lxml
