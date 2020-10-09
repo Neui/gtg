@@ -1,0 +1,179 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/org/gnome/GTG">
+    <!--
+        org.gnome.GTG.Tasks:
+        @short_description: Manage GTG Tasks
+
+        Interface that GTG implements to let other applications view and edit
+        tasks.
+
+        An common type used here would be the so-called "task dict(ionary)" or
+        {sv}. It means it is a map of string to generic values. They could
+        contain:
+
+        * id (s): The id the task can be identified
+        * title (s): Title of the task
+        * status (i): 0: Unknown, 1: Open, 2: Closed
+        * text (s): Text content of the task
+        * duedate (s): Due date in ISO TODO, or a fuzzy date "now", "soon", "someday"
+        * startdate (s): Start date in ISO TODO, or a fuzzy date "now", "soon", "someday"
+        * donedate (s): When the task was finished, in ISO TODO
+        * tags (as): Tasks the task has, without @
+        * subtasks (as): Subtasks as UIDs the task contains
+        * parent (s): ID of the parent task (empty or non-existent means root)
+    -->
+    <interface name="org.gnome.GTG.Tasks">
+        <!--
+            GetTasks:
+            @uids: An array of Task UIDs, whose info should be retrieved
+            @tasks: An dictionary of UIDs to their task dictionary.
+
+            TODO: API documentation
+        -->
+        <method name="GetTasks">
+            <arg name="uids" type="as" direction="in"/>
+            <arg name="tasks" type="aa{sv}" direction="out"/>
+            <!-- <arg name="tasks" type="a{sa{sv}}" direction="out"/> -->
+        </method>
+
+        <!--
+            GetTasks:
+            @tasks: An array of tasks dictionary that are currently active.
+
+            TODO: API documentation, explain what active means
+            Refer to the interface description for the task dict values.
+        -->
+        <method name="GetActiveTasks">
+            <arg name="tasks" type="aa{sv}" direction="out"/>
+        </method>
+
+        <!--
+            GetTaskIdsFiltered:
+            @filter: Filters to apply, also see filters_bank documentation
+            @task_ids: Filtered tasks ids matching the specified filters
+
+            TODO: API documentation
+            Also see the GetTaskFiltered method to find more about filters.
+        -->
+        <method name="GetTaskIdsFiltered">
+            <arg name="filter" type="as" direction="in"/>
+            <arg name="tasks_ids" type="as" direction="out"/>
+        </method>
+
+        <!--
+            GetTasksFiltered:
+            @filter: Filters to apply, also see filters_bank documentation
+            @tasks: Filtered tasks dicts matching the specified filters
+
+            TODO: API documentation, possibly explain some of filters_bank
+        -->
+        <method name="GetTasksFiltered">
+            <arg name="filter" type="as" direction="in"/>
+            <arg name="tasks" type="aa{sv}" direction="out"/>
+        </method>
+
+        <!--
+            SearchTasks:
+            @query: Search for tasks, like search bar with special options
+            @tasks: Filtered tasks ids matching the specified filters
+
+            TODO: API documentation, possibly explain some of the specials
+            (If used, need to check)
+        -->
+        <method name="SearchTaskIds">
+            <arg name="query" type="s" direction="in"/>
+            <arg name="tasks" type="as" direction="out"/>
+        </method>
+
+        <!--
+            SearchTasks:
+            @query: Search for tasks, like search bar with special options
+            @tasks: Filtered tasks dicts matching the specified filters
+
+            TODO: API documentation, possibly explain some of the specials
+            (If used, need to check)
+        -->
+        <method name="SearchTasks">
+            <arg name="query" type="s" direction="in"/>
+            <arg name="tasks" type="aa{sv}" direction="out"/>
+        </method>
+
+        <!--
+            HasTasks:
+            @tids: Array of task IDs to check
+            @successful: Map of task IDs to a boolean indicating it exists
+
+            TODO: API documentation
+        -->
+        <method name="HasTasks">
+            <arg name="tids" type="as" direction="in"/>
+            <arg name="present" type="a{sb}" direction="out"/>
+        </method>
+
+        <!--
+            DeleteTasks:
+            @task_ids: Array of task IDs to delete
+            @successful: Map of task IDs to a boolean indication success deleting
+
+            TODO: API documentation
+        -->
+        <method name="DeleteTasks">
+            <arg name="task_ids" type="as" direction="in"/>
+            <arg name="successful" type="a{sb}" direction="out"/>
+        </method>
+
+        <!--
+            NewTasks:
+            @data: Array of task dictionaries to add
+            @ids: Array of the new task IDs for the tasks
+
+            TODO: API documentation
+        -->
+        <method name="NewTasks">
+            <arg name="data" type="aa{sv}" direction="in"/>
+            <arg name="ids" type="as" direction="out"/>
+        </method>
+
+        <!--
+            ModifyTasks:
+            @patch: Array of task dictionaries to update, uses the tid
+            @resulting: TODO
+
+            TODO: API documentation
+        -->
+        <method name="ModifyTasks">
+            <arg name="patch" type="aa{sv}" direction="in"/>
+            <arg name="result" type="aa{sv}" direction="out"/>
+        </method>
+
+        <!--
+            TaskAdded:
+            @tid: Task ID that has been added
+
+            TODO: API documentation
+        -->
+        <signal name="TaskAdded">
+            <arg name="tid" type="s"/>
+        </signal>
+
+        <!--
+            TaskAdded:
+            @tid: Task ID that has been modified
+
+            TODO: API documentation
+        -->
+        <signal name="TaskModified">
+            <arg name="tid" type="s"/>
+        </signal>
+
+        <!--
+            TaskAdded:
+            @tid: Task ID that has been deleted
+
+            TODO: API documentation
+        -->
+        <signal name="TaskDeleted">
+            <arg name="tid" type="s"/>
+        </signal>
+    </interface>
+</node>
