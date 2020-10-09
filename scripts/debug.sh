@@ -42,6 +42,8 @@ export XDG_DATA_HOME="./tmp/$dataset/xdg/data"
 export XDG_CACHE_HOME="./tmp/$dataset/xdg/cache"
 export XDG_CONFIG_HOME="./tmp/$dataset/xdg/config"
 
+export XDG_DATA_DIRS="$PWD/.local_build/install/share:$XDG_DATA_DIRS"
+
 # Title has to be passed to GTG directly, not through $args
 # title could be more word, and only the first word would be taken
 if [[ "$title" = "" ]]; then
