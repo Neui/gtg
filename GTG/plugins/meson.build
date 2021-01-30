@@ -14,8 +14,17 @@ gtg_plugins = [
   'dev_console',
 ]
 
+message('---------------------------')
+message('If you see "../GTG/plugins/meson.build: ... invalid value to variable." in following this, gettext has not been installed!')
+message('---------------------------')
+# ../GTG/plugins/meson.build:19:2: ERROR: Tried to assign an invalid value to variable.
+
 foreach plugin : gtg_plugins
-  i18n.merge_file(
+  # HACK: Abusing when gettext is not installed, meson will return an invalid
+  # value that meson complains when trying to assign to a variable.
+  # Taking advantage of that to error when gettext is missing.
+  # Also see https://github.com/mesonbuild/meson/issues/6165
+  something = i18n.merge_file(
     input: plugin + '.gtg-plugin.desktop', # Big hack to make xgettext detect
     output: plugin + '.gtg-plugin',
     po_dir: meson.source_root() / 'po',
