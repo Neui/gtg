@@ -110,7 +110,7 @@ However, more unexpected things can happen, and thus be careful.""")
 
         text = ""
         if self._context_info is not None:
-            text = text + self._context_info + "\n\n"
+            text = text + "Context: " + self._context_info + "\n\n"
         text = text + body + "\n\n"
         text = text + _collect_versions()
 
