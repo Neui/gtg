@@ -40,6 +40,7 @@ from GTG.core.dates import Date
 from GTG.gtk.backends import BackendsDialog
 from GTG.gtk.browser.tag_editor import TagEditor
 from GTG.core.timer import Timer
+from GTG.gtk.errorhandler import do_error_dialog
 
 log = logging.getLogger(__name__)
 
@@ -76,6 +77,8 @@ class Application(Gtk.Application):
     delete_task_dialog = None
     edit_tag_dialog = None
 
+    _exception = None  # Set when error occurs in startup to show a dialog
+
     def __init__(self, app_id):
         """Setup Application."""
 
@@ -88,38 +91,48 @@ class Application(Gtk.Application):
 
     def do_startup(self):
         """Callback when primary instance should initialize"""
-        Gtk.Application.do_startup(self)
+        try:
+            Gtk.Application.do_startup(self)
 
-        # Register backends
-        datastore = DataStore()
+            # Register backends
+            datastore = DataStore()
 
-        for backend_dic in BackendFactory().get_saved_backends_list():
-            datastore.register_backend(backend_dic)
+            for backend_dic in BackendFactory().get_saved_backends_list():
+                datastore.register_backend(backend_dic)
 
-        # Save the backends directly to be sure projects.xml is written
-        datastore.save(quit=False)
+            # Save the backends directly to be sure projects.xml is written
+            datastore.save(quit=False)
 
-        self.req = datastore.get_requester()
+            self.req = datastore.get_requester()
 
-        self.config = self.req.get_config("browser")
-        self.config_plugins = self.req.get_config("plugins")
+            self.config = self.req.get_config("browser")
+            self.config_plugins = self.req.get_config("plugins")
 
-        self.clipboard = clipboard.TaskClipboard(self.req)
+            self.clipboard = clipboard.TaskClipboard(self.req)
+            raise Exception()
 
-        self.timer = Timer(self.config)
-        self.timer.connect('refresh', self.autoclean)
+            self.timer = Timer(self.config)
+            self.timer.connect('refresh', self.autoclean)
 
-        self.preferences_dialog = Preferences(self.req, self)
-        self.plugins_dialog = PluginsDialog(self.req)
+            self.preferences_dialog = Preferences(self.req, self)
+            self.plugins_dialog = PluginsDialog(self.req)
 
-        if self.config.get('dark_mode'):
-            self.toggle_darkmode()
+            if self.config.get('dark_mode'):
+                self.toggle_darkmode()
 
-        self.init_style()
+            self.init_style()
+        except Exception as e:
+            self._exception = e
+            log.exception("Exception during startup")
+            dialog = do_error_dialog(self._exception, "Startup", ignorable=False)
+            dialog.set_application(self)  # Keep application alive to show it
+            # raise e # Don't re-raise to not trigger the global exception hook
 
     def do_activate(self):
         """Callback when launched from the desktop."""
 
+        if self._check_exception():
+            return
         self.init_shared()
         self.browser.present()
 
@@ -128,6 +141,8 @@ class Application(Gtk.Application):
     def do_open(self, files, n_files, hint):
         """Callback when opening files/tasks"""
 
+        if self._check_exception():
+            return
         self.init_shared()
         len_files = len(files)
         log.debug("Received %d Task URIs", len_files)
@@ -149,6 +164,19 @@ class Application(Gtk.Application):
                 log.info("Unknown task to open: %s", file.get_uri())
 
         log.debug("Application opening finished")
+
+    def _check_exception(self) -> bool:
+        """
+        Checks whenever an error occured before at startup, and shows an dialog.
+        Returns True whenhever such error occured, False otherwise.
+        """
+        if self._exception is not None:
+            # dialog = do_error_dialog(self._exception, "Startup", ignorable=False)
+            # dialog.set_application(self)  # Keep application alive, for now
+            # self.hold()  # Keep application alive to show the dialog
+            # raise self._exception
+            pass
+        return self._exception is not None
 
     def init_shared(self):
         """
