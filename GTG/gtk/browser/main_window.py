@@ -41,6 +41,7 @@ from GTG.gtk.browser.treeview_factory import TreeviewFactory
 from GTG.gtk.editor.calendar import GTGCalendar
 from GTG.gtk.tag_completion import TagCompletion
 from GTG.core.dates import Date
+from GTG.gtk.errorhandler import errorhandler
 
 log = logging.getLogger(__name__)
 PANE_STACK_NAMES_MAP = {
@@ -199,7 +200,7 @@ class MainWindow(Gtk.ApplicationWindow):
         for action, callback, accel in action_entries:
             if callback is not None:
                 simple_action = Gio.SimpleAction.new(action, None)
-                simple_action.connect('activate', callback)
+                simple_action.connect('activate', errorhandler(callback))
                 simple_action.set_enabled(True)
 
                 self.add_action(simple_action)
@@ -1071,6 +1072,7 @@ class MainWindow(Gtk.ApplicationWindow):
     def on_start_for_tomorrow(self, action, param):
         """Set a task to start tomorrow."""
 
+        sejfnklfdslkf
         self.update_start_date(None, "tomorrow")
 
     def on_start_for_next_day_2(self, action, param):
