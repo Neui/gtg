@@ -200,7 +200,7 @@ class MainWindow(Gtk.ApplicationWindow):
         for action, callback, accel in action_entries:
             if callback is not None:
                 simple_action = Gio.SimpleAction.new(action, None)
-                simple_action.connect('activate', errorhandler(callback))
+                simple_action.connect('activate', callback)
                 simple_action.set_enabled(True)
 
                 self.add_action(simple_action)
