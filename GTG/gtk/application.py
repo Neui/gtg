@@ -580,6 +580,7 @@ class Application(Gtk.Application):
                                       "%(message)s")
         handler.setFormatter(formatter)
         logger_ = logging.getLogger('GTG')
+        logger_ = logging.getLogger()
         handler.setLevel(level)
         logger_.addHandler(handler)
         logger_.setLevel(level)

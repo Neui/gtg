@@ -103,7 +103,15 @@ def handle_local_options(application, options):
 
     return -1 # Continue parsing
 
+import logging
+import glib_log_bridge.glib2python as glib2python
+import glib_log_bridge.python2glib as python2glib
+
 if __name__ == "__main__":
+    g2plog = glib2python.GLibToPythonLogger()
+    GLib.log_set_writer_func(g2plog.glibToPythonLogWriterFunc, None)
+    logging.getLogger().addHandler(python2glib.pythonToGLibWriterJournald)
+
     if _LOCAL:
         print("Running from source tree")
     try:
