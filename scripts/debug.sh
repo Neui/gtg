@@ -54,6 +54,7 @@ echo "-----------------------------------------------------------------------"
 export XDG_DATA_HOME="$PWD/tmp/$dataset/xdg/data"
 export XDG_CACHE_HOME="$PWD/tmp/$dataset/xdg/cache"
 export XDG_CONFIG_HOME="$PWD/tmp/$dataset/xdg/config"
+export XDG_DATA_DIRS="$PWD/.local_build/install/share:$XDG_DATA_DIRS"
 
 # Title has to be passed to GTG directly, not through $args
 # title could be more word, and only the first word would be taken
@@ -75,5 +76,5 @@ if [[ "$norun" -eq 0 ]]; then
     fi
     # double quoting args seems to prevent python script from picking up flag arguments correctly
     # shellcheck disable=SC2086
-    ./.local_build/prefix-gtg.sh ./.local_build/install/bin/gtg ${args} -t "$title" "${extra_args[@]}" || exit $?
+    ./.local_build/prefix-gtg.sh ./.local_build/install/bin/gtg ${args} || exit $?
 fi
