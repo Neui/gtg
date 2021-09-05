@@ -124,6 +124,15 @@ class TreeFactory():
         self.tagtree_loaded = True
         return tagtree
 
+    def get_saved_search_tree(self, req):
+        """This create a liblarch tree suitable for saved searches."""
+        savedsearchtree = Tree()
+
+        # TODO: Add tree
+        self.savedsearchtree = savedsearchtree
+        self.savedsearchtree_loaded = True
+        return savedsearchtree
+
     # Tag Filters ##########################################
 
     # filter to display only tags with active tasks

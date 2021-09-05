@@ -41,6 +41,7 @@ from GTG.gtk.browser.treeview_factory import TreeviewFactory
 from GTG.gtk.editor.calendar import GTGCalendar
 from GTG.gtk.tag_completion import TagCompletion
 from GTG.core.dates import Date
+from GTG.gtk.browser.sidebar_tree import SidebarTreeModel
 
 log = logging.getLogger(__name__)
 PANE_STACK_NAMES_MAP = {
@@ -295,27 +296,48 @@ class MainWindow(Gtk.ApplicationWindow):
         """
         initializes the tagtree (left area with tags and searches)
         """
-        self.tagtree = self.req.get_tag_tree()
-        self.tagtreeview = self.tv_factory.tags_treeview(self.tagtree)
-        self.tagtreeview.get_selection().connect('changed', self.on_select_tag)
-        self.tagtreeview.connect('button-press-event', self.on_tag_treeview_button_press_event)
-        self.tagtreeview.connect('key-press-event', self.on_tag_treeview_key_press_event)
-        self.tagtreeview.connect('node-expanded', self.on_tag_expanded)
-        self.tagtreeview.connect('node-collapsed', self.on_tag_collapsed)
-        self.sidebar_container.add(self.tagtreeview)
+        # self.tagtree = self.req.get_tag_tree()
+        # self.tagtreeview = self.tv_factory.tags_treeview(self.tagtree)
+        # self.tagtreeview.get_selection().connect('changed', self.on_select_tag)
+        # self.tagtreeview.connect('button-press-event', self.on_tag_treeview_button_press_event)
+        # self.tagtreeview.connect('key-press-event', self.on_tag_treeview_key_press_event)
+        # self.tagtreeview.connect('node-expanded', self.on_tag_expanded)
+        # self.tagtreeview.connect('node-collapsed', self.on_tag_collapsed)
+        # self.sidebar_container.add(self.tagtreeview)
 
-        for path_t in self.config.get("expanded_tags"):
-            # the tuple was stored as a string. we have to reconstruct it
-            path = ()
-            for p in path_t[1:-1].split(","):
-                p = p.strip(" '")
-                path += (p, )
-            if path[-1] == '':
-                path = path[:-1]
-            self.tagtreeview.expand_node(path)
+        # for path_t in self.config.get("expanded_tags"):
+        #     # the tuple was stored as a string. we have to reconstruct it
+        #     path = ()
+        #     for p in path_t[1:-1].split(","):
+        #         p = p.strip(" '")
+        #         path += (p, )
+        #     if path[-1] == '':
+        #         path = path[:-1]
+        #     self.tagtreeview.expand_node(path)
 
-        # expanding search tag does not work automatically, request it
-        self.expand_search_tag()
+        # # expanding search tag does not work automatically, request it
+        # self.expand_search_tag()
+        pass
+        self.sidebartree = SidebarTreeModel(tags_tree=self.req.get_tag_tree())
+        self.sidebartreeview = Gtk.TreeView.new_with_model(self.sidebartree)
+        icon_col = Gtk.TreeViewColumn.new()
+        # self.sidebartreeview.add_
+        name_render = Gtk.CellRendererText()
+        name_render.set_property('ypad', 5)
+        name_col = Gtk.TreeViewColumn.new()
+        name_col.pack_end(name_render, True)
+        name_col.add_attribute(name_render, "text", 0)
+        name_col.set_cell_data_func(name_render, SidebarTreeModel.get_display_name)
+        self.sidebartreeview.append_column(name_col)
+        render_text = Gtk.CellRendererText()
+        render_text.set_property('ypad', 5)
+
+        self.sidebartreeview.props.enable_tree_lines = False
+        self.sidebartreeview.props.rules_hint = False
+        self.sidebartreeview.set_row_separator_func(SidebarTreeModel.is_seperator)
+        self.sidebartreeview.props.headers_visible = False
+        self.sidebartreeview.props.visible = True
+        self.sidebar_container.add(self.sidebartreeview)
 
     def _init_about_dialog(self):
         """

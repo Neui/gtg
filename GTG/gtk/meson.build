@@ -7,6 +7,7 @@ gtg_gtk_sources = [
   'plugins.py',
   'preferences.py',
   'tag_completion.py',
+  'tree_util.py',
 ]
 
 gtg_backend_sources = [
@@ -40,6 +41,7 @@ gtg_browser_sources = [
   'browser/tag_editor.py',
   'browser/treeview_factory.py',
   'browser/quick_add.py',
+  'browser/sidebar_tree.py',
 ]
 
 gtg_data_sources = [

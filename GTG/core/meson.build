@@ -23,10 +23,12 @@ info_py = configure_file(
 
 gtg_core_sources = [
   '__init__.py',
+  'base_store.py',
   'borg.py',
   'clipboard.py',
   'config.py',
   'datastore.py',
+  'datastore2.py',
   'dates.py',
   'dirs.py',
   'firstrun_tasks.py',
@@ -34,6 +36,7 @@ gtg_core_sources = [
   'keyring.py',
   'networkmanager.py',
   'requester.py',
+  'saved_searches.py',
   'search.py',
   'tag.py',
   'task.py',

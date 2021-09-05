@@ -34,6 +34,7 @@ from GTG.core.tag import Tag, SEARCH_TAG
 from GTG.core.task import Task
 from GTG.core.treefactory import TreeFactory
 from GTG.core.borg import Borg
+from GTG.core.saved_searches import SavedSearch, SavedSearchStore
 
 
 log = logging.getLogger(__name__)
@@ -60,6 +61,9 @@ class DataStore():
         self.requester = requester.Requester(self, global_conf)
         self.tagfile_loaded = False
         self._tagstore = self.treefactory.get_tags_tree(self.requester)
+        # self._savedsearchstore = self.treefactory.get_saved_search_tree(
+        #     self.requester)
+        self._savedsearchstore = SavedSearchStore()
         self._backend_signals = BackendSignals()
         self.conf = global_conf
         self.tag_idmap = {}
@@ -122,32 +126,6 @@ class DataStore():
         self._add_new_tag(name, tag, self.treefactory.tag_filter, parameters)
         return tag
 
-    def new_search_tag(self, name, query, attributes={}, tid=None, save=True):
-        """
-        Create a new search tag
-
-        @returns GTG.core.tag.Tag: the new search tag/None for a invalid query
-        """
-        try:
-            parameters = parse_search_query(query)
-        except InvalidQuery as error:
-            log.warning("Problem with parsing query %r (skipping): %s", query, error.message)
-            return None
-
-        # Create own copy of attributes and add special attributes label, query
-        init_attr = dict(attributes)
-        init_attr["label"] = name
-        init_attr["query"] = query
-
-        tag = Tag(name, req=self.requester, attributes=init_attr, tid=tid)
-        self._add_new_tag(name, tag, search_filter, parameters,
-                          parent_id=SEARCH_TAG)
-
-        if save:
-            self.save_tagtree()
-
-        return tag
-
     def remove_tag(self, name):
         """ Removes a tag from the tagtree """
         if self._tagstore.has_node(name):
@@ -172,45 +150,45 @@ class DataStore():
 
         tag = self.get_tag(oldname)
 
-        if not tag.is_search_tag():
-            for task_id in tag.get_related_tasks():
+        assert not tag.is_search_tag()
+        for task_id in tag.get_related_tasks():
 
-                # Store old tag attributes
-                color = tag.get_attribute("color")
-                icon = tag.get_attribute("icon")
-                tid = tag.tid
+            # Store old tag attributes
+            color = tag.get_attribute("color")
+            icon = tag.get_attribute("icon")
+            tid = tag.tid
 
-                my_task = self.get_task(task_id)
-                my_task.rename_tag(oldname, newname)
+            my_task = self.get_task(task_id)
+            my_task.rename_tag(oldname, newname)
 
-                # Restore attributes on tag
-                new_tag = self.get_tag(newname)
-                new_tag.tid = tid
+            # Restore attributes on tag
+            new_tag = self.get_tag(newname)
+            new_tag.tid = tid
 
-                if color:
-                    new_tag.set_attribute("color", color)
+            if color:
+                new_tag.set_attribute("color", color)
 
-                if icon:
-                    new_tag.set_attribute("icon", icon)
+            if icon:
+                new_tag.set_attribute("icon", icon)
 
-            self.remove_tag(oldname)
-            self.save_tagtree()
-
-            return None
-
-        query = tag.get_attribute("query")
         self.remove_tag(oldname)
+        self.save_tagtree()
 
-        # Make sure the name is unique
-        if newname.startswith('!'):
-            newname = '_' + newname
+        return None
 
-        label, num = newname, 1
-        while self._tagstore.has_node(label):
-            num += 1
-            label = newname + " " + str(num)
+        # query = tag.get_attribute("query")
+        # self.remove_tag(oldname)
 
-        self.new_search_tag(label, query, {}, tag.tid)
+        # # Make sure the name is unique
+        # if newname.startswith('!'):
+        #     newname = '_' + newname
+
+        # label, num = newname, 1
+        # while self._tagstore.has_node(label):
+        #     num += 1
+        #     label = newname + " " + str(num)
+
+        # self.new_search_tag(label, query, {}, tag.tid)
 
     def get_tag(self, tagname):
         """
@@ -256,27 +234,6 @@ class DataStore():
             self.tag_idmap[tid] = tag
 
         self.tagfile_loaded = True
-
-
-    def load_search_tree(self, search_tree):
-        """Load saved searches tree."""
-
-        for element in search_tree.iter('savedSearch'):
-            tid = element.get('id')
-            name = element.get('name')
-            color = element.get('color')
-            icon = element.get('icon')
-            query = element.get('query')
-
-            tag_attrs = {}
-
-            if color:
-                tag_attrs['color'] = color
-
-            if icon:
-                tag_attrs['icon'] = icon
-
-            self.new_search_tag(name, query, tag_attrs, tid, False)
 
 
     def get_tag_by_id(self, tid):
@@ -381,6 +338,82 @@ class DataStore():
             # Thread protection
             adding(task)
             return True
+
+    # Saved Searches functions ################################################
+
+    def new_search_tag(self, name, query, attributes={}, tid=None, save=True):
+        """
+        Create a new saved search
+        """
+        try:
+            parameters = parse_search_query(query)
+        except InvalidQuery as error:
+            log.warning("Problem with parsing query %r (skipping): %s",
+                           query, error.message)
+            return None
+
+        # # Create own copy of attributes and add special attributes label, query
+        # init_attr = dict(attributes)
+        # init_attr["label"] = name
+        # init_attr["query"] = query
+
+        # tag = Tag(name, req=self.requester, attributes=init_attr, tid=tid)
+        # self._add_new_tag(name, tag, search_filter, parameters,
+        #                   parent_id=SEARCH_TAG)
+        if tid is None:
+            tid = uuid.uuid4()
+
+        ss = SavedSearch(tid, name, query)
+        # TODO: Set icon/color
+
+        if save:
+            self.save_savedsearchtree()
+
+        return tag
+
+    def load_search_tree(self, search_tree):
+        """Load saved searches tree."""
+
+        print("Search Tree:")
+        print(search_tree)
+        self._savedsearchstore.from_xml(search_tree)
+
+        # for element in search_tree.iter('savedSearch'):
+        #     tid = element.get('id')
+        #     name = element.get('name')
+        #     color = element.get('color')
+        #     icon = element.get('icon')
+        #     query = element.get('query')
+
+        #     tag_attrs = {}
+
+        #     if color:
+        #         tag_attrs['color'] = color
+
+        #     if icon:
+        #         tag_attrs['icon'] = icon
+
+        #     self.new_search_tag(name, query, tag_attrs, tid, False)
+
+    def save_savedsearchtree(self):
+        """ Saves the saved searches tree to an XML file """
+
+        log.warning("TODO: Implement this properly")
+        pass
+        # if not self.tagfile_loaded:
+        #     return
+
+        # tags = self._tagstore.get_main_view().get_all_nodes()
+
+        # for backend in self.backends.values():
+        #     if backend.get_name() == 'backend_localfile':
+        #         backend.save_tags(tags, self._tagstore)
+
+    def get_saved_search_store(self):
+        """
+        Return the Saved Search associated with this DataStore
+        """
+        return self._savedsearchstore
 
     ##########################################################################
     # Backends functions
