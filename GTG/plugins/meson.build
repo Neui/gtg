@@ -12,21 +12,33 @@ gtg_plugins = [
   'urgency-color',
   'hamster',
   'dev_console',
-	'gamify',
+  'gamify',
 ]
 
+# HACK to workaround bug TODO
+# by including all the PO files as a dependency.
+pofiles = []
+fs = import('fs')
+langs = fs.read(meson.source_root() / 'po' / 'LINGUAS', encoding: 'utf-8')
+foreach lang : langs.split('\n')
+  if not lang.startswith('#')
+    pofiles += meson.source_root() / 'po' / lang.strip() + '.po'
+  endif
+endforeach
+
 foreach plugin : gtg_plugins
+  pofiles_with_input = [plugin + '.gtg-plugin']
+  pofiles_with_input += pofiles # Trying to keep the array flat
   i18n.merge_file(
-    input: plugin + '.gtg-plugin.desktop', # Big hack to make xgettext detect
+    input: pofiles_with_input,
     output: plugin + '.gtg-plugin',
     po_dir: meson.source_root() / 'po',
     install: true,
     install_dir: plugin_install_dir,
     type: 'desktop',
-    args: ['--keyword=name', '--keyword=short-description', '--keyword=description'],
+    args: ['--language=Desktop',
+      '--keyword=name', '--keyword=short-description', '--keyword=description'],
     build_by_default: true,
-    build_always_stale: true
-    # build always because otherwise new translations won't be applied
   )
   subdir(plugin.underscorify())
 endforeach
