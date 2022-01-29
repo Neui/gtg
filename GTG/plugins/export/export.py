@@ -169,7 +169,7 @@ class ExportPlugin():
 
         self.export_dialog = builder.get_object("export_dialog")
         self.export_image = builder.get_object("export_image")
-        self.description_label = builder.get_object("label_description")
+        self.description_label = builder.get_object("export_label_description")
         self.save_button = builder.get_object("export_btn_save")
         self.open_button = builder.get_object("export_btn_open")
 

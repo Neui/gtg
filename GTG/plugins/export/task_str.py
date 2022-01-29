@@ -36,8 +36,10 @@ class TaskStr():
         self.start_date = str(task.get_start_date())
         self.days_left = str(task.get_days_left())
         self.tags = [t.get_id() for t in task.get_tags()]
+        self.id = str(task.get_id())
 
         self.subtasks = subtasks
+        self.subtasks_id_to_task = {task.id: task for task in subtasks}
 
     has_title = property(lambda s: s.title != "")
     has_text = property(lambda s: s.text != "")

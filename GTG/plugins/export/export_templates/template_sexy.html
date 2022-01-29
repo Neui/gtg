@@ -76,6 +76,15 @@ template (remember to attach the file). It's good karma!
 For a more advanced usage of templates, scroll down to the end of this document
 
 ~~Luca Invernizzi: <invernizzi.l@gmail.com> ~~
+
+
+#def tag_to_inside($tag)
+#if $tag.get_attribute('icon'):
+return $tag.get_attribute('icon')
+#else
+return '&nbsp'
+#end if
+#end def
 -->
 <html>
     <head>
@@ -86,7 +95,7 @@ For a more advanced usage of templates, scroll down to the end of this document
             body { font-family: 'Droid Sans', Calibri, 'Lucida Grande' Helvetica, sans-serif; padding: 0 0.5em 2em 0.5em; }
             div.tags-key { padding: 0.2em; border: 1px solid #ccc; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; }
             div.tags-key h3 { margin: 0.4em 0.5em; padding: 0.15em 0.2em; border-bottom: 1px solid #ddd; }
-            p.tag { float: left; padding: 0.3em; margin: 0.1em 0.3em; width: 20%; }
+            ul.tag { float: left; padding: 0.3em; margin: 0.1em 0.3em; width: 20%; }
 
             table { border-collapse: collapse; margin-bottom: 2em; }
             th { border: 1px solid #ddd; background-color: #dedede; padding: 0.2em; }
@@ -99,7 +108,9 @@ For a more advanced usage of templates, scroll down to the end of this document
             td p.task { margin: 0.1em 0 0.1em 0.2em; }
             td p.subtask { color: #666; margin: 0.1em 0 0.1em 2em; }
             td p.subtask:before { content: "\21d2 "; margin-right: 0.3em; }
-            td p.description { font-style: italic; font-size: 90%; color: #bbb; margin: 0 0.5em 0.2em 0.7em; }
+            td div.description { font-style: italic; font-size: 90%; color: #bbb; margin: 0 0.5em 0.2em 0.7em; }
+            td div.description h2 { margin-top: 0; margin-bottom: 0; }
+            td div.description ul { margin-top: 0; margin-bottom: 0; }
 
             .clear { float: none; clear: both; }
 
@@ -110,8 +121,9 @@ For a more advanced usage of templates, scroll down to the end of this document
                     #continue
                 #end if
                 #try:
-                span.#slurp
-$tag.replace('@', '') { background-color: $tag_obj.get_attribute('color'); }
+                span.tag-$tag.replace('@', '') {
+					background-color: $tag_obj.get_attribute('color') !important;
+				}
                 #except:
                     #pass
                 #end try
@@ -143,11 +155,11 @@ $task_template($task)#slurp
 
         <!-- this is the function that generates a task -->
         #def task_template($task, $is_subtask = '')
-            <tr>
+            <tr id="$task.id">
                 #if $task.has_tags
                     <td class="tag">#slurp
                     #for $tag in $task.tags:
-                        <span class="$tag.replace('@', '')" title="$tag.replace('@', '')">&nbsp;</span>#slurp
+                        <span class="tag-$tag.replace('@', '')" title="$tag.replace('@', '')">$tag_to_inside($tag)</span>#slurp
                     #end for
                 #else
                     <td class="tag">#slurp
@@ -161,7 +173,7 @@ class="task"#slurp
                         #end if
 >$task.title</p>
                     #if $task.has_text
-                    <p class="description">$remove_html_tags($task.text)</p>
+                    <div class="description"><p>$desc_to_html($task.text, $task)</p></div>
                     #end if
                 #end if
                 </td>
@@ -171,45 +183,43 @@ $task.due_date#slurp
 #end if#</td>
             </tr>
             #if $task.has_subtasks
-            <tr>
                 #for $subtask in $task.subtasks:
                     $task_template($subtask, 'subtask')
                 #end for
-            </tr>
             #end if
         #end def
 
 <div class="tags-key">
 <h3>Tags Key</h3>
+    <ul>
     #for $tag in $plugin_api.get_requester().get_tag_tree().get_all_nodes():
         #set $tag_obj = $plugin_api.get_requester().get_tag_tree().get_node($tag)
         #if $tag_obj.is_special():
             #continue
         #end if
-        <p class="tag"><span class="$tag.replace('@', '')" title="$tag.replace('@', '')">&nbsp;</span>$tag.replace('@', '')</p>
+        <li class="tag"><span class="$tag.replace('@', '')" title="$tag.replace('@', '')">$tag_to_inside($tag)</span>$tag.replace('@', '')</li>
     #end for
+    </ul>
     <br class="clear" />
 </div>
 
 
-##This is just to avoid annoying characters around. If you don't believe me,
-## just take it out
 #import re
-#def remove_html_tags($data):
-    ##Removing subtask anchor points
-    #set $p = $re.compile(r'^.*<subtask>[0-9]*@[0-9]*</subtask>.*$',$re.MULTILINE)
-    #set $data = $p.sub('', $data)
-    ##Removing tags
-    #set $p = $re.compile(r'@[a-z,0-9]*',$re.IGNORECASE)
-    #set $data = $p.sub('', $data)
-    ##Removing <something> and </something>
-    #set $p = $re.compile(r'<.*?>')
-    #set $data = $p.sub('', $data)
-    ##Removing lines only with commas (tags lines)
-    #set $p = $re.compile(r'^[\s,\,]*$')
-    #return $p.sub('', $data).strip().strip(',')
+#def desc_to_html($desc, $task):
+    #set $desc = $re.sub(r'&', '&amp;', $desc)
+    #set $desc = $re.sub(r'<', '&gt;', $desc)
+    #set $desc = $re.sub(r'>', '&lt;', $desc)
+    #set $desc = $re.sub(r'^ *# *(.+)', '</p><h2>\\1</h2><p>', $desc, flags=$re.MULTILINE)
+    #set $desc = $re.sub(r'\n', '<br>', $desc)
+    #def re_to_title($match)
+    #set $tid = match.group(1).strip()
+    #set $subtask = task.subtasks_id_to_task.get($tid.strip(), None)
+    #set $title = $subtask and $subtask.title or $tid
+    #return '<ul><li><a href="#' + $tid + '">' + $title +'</a></li></ul>'
+    #end def
+    #set $desc = $re.sub(r'{! *([a-zA-Z0-9-]+) *!}', re_to_title, $desc)
+    #return $desc
 #end def
-
 
 <!-- If you need to write something fancy, GTG's templates let you do so.
 You're given full access to GTG's API through the $plugin_api variable.
