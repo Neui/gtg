@@ -758,7 +758,7 @@ class Task(TreeNode):
         """
         Updates the modified timestamp
         """
-        self.last_modified = datetime.now()
+        self.last_modified = Date(datetime.now())
 
 # TAG FUNCTIONS ##############################################################
     def get_tags_name(self):

@@ -22,6 +22,8 @@ from gettext import gettext as _
 
 from gi.repository import Gtk
 
+from GTG.core.dates import Accuracy
+
 log = logging.getLogger(__name__)
 
 
@@ -112,7 +114,7 @@ class UntouchedTasksPlugin():
 
         # Add untouched tag to all tasks where new_date < time now
         for task in closed_tasks:
-            modified_time = task.get_modified()
+            modified_time = task.get_modified().dt_by_accuracy(Accuracy.datetime)
             new_time = modified_time + datetime.timedelta(days=max_days)
             if new_time < today:
                 log.debug('Adding %r tag to: %r as last time it was modified '
